@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { askWealthBot } from '@/lib/api';
+import Link from 'next/dist/client/link';
 
 const sipOptions = [
   { amount: 100, label: '₹100/month', desc: 'Start small, dream big', color: '#10b981', years: 10, returns: '₹23,000' },
@@ -22,10 +23,16 @@ const fundOptions = [
   { name: 'Axis Midcap Fund', type: 'Mid Cap', risk: 'Medium', returns: '15% avg', icon: '📈', color: '#6366f1' },
   { name: 'HDFC Small Cap', type: 'Small Cap', risk: 'High', returns: '18% avg', icon: '🚀', color: '#f59e0b' },
 ];
-const [wealthAdvice, setWealthAdvice] = useState('');
-const [loadingWealth, setLoadingWealth] = useState(false);
 
-useEffect(() => {
+
+
+export default function WealthPage() {
+  const [wealthAdvice, setWealthAdvice] = useState('');
+const [loadingWealth, setLoadingWealth] = useState(false);
+  const [activeTab, setActiveTab] = useState('journey');
+  const [selectedSip, setSelectedSip] = useState(sipOptions[0]);
+  const [savings, setSavings] = useState('10');
+  useEffect(() => {
   const fetchAdvice = async () => {
     setLoadingWealth(true);
     try {
@@ -40,11 +47,6 @@ useEffect(() => {
   fetchAdvice();
 }, []);
 
-export default function WealthPage() {
-  const [activeTab, setActiveTab] = useState('journey');
-  const [selectedSip, setSelectedSip] = useState(sipOptions[0]);
-  const [savings, setSavings] = useState('10');
-
   const savingsNum = parseFloat(savings) || 0;
   const monthlyGrowth = savingsNum * 1.08;
 
@@ -58,12 +60,12 @@ export default function WealthPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           width: 34, height: 34, borderRadius: 10,
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, textDecoration: 'none', color: '#fff'
-        }}>←</a>
+        }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>WealthBot 💰</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>₹10 savings → First SIP</div>

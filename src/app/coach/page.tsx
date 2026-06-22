@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { askCoachBot } from '@/lib/api';
+import Link from 'next/dist/client/link';
 
 const habits = [
   { id: 1, title: 'Save ₹50 today', desc: 'Put ₹50 aside right now — even small steps count', icon: '💰', color: '#10b981', points: 10, done: false },
@@ -67,7 +68,7 @@ export default function CoachPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#060912', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <header style={{ background: 'rgba(6,9,18,0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 50 }}>
-        <a href="/" style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, textDecoration: 'none', color: '#fff' }}>←</a>
+        <Link href="/" style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, textDecoration: 'none', color: '#fff' }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>CoachBot</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>Daily financial habit nudges</div>

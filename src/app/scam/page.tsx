@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { checkScam } from '@/lib/api';
+import Link from 'next/dist/client/link';
 
 type ScanResult = {
   status: 'safe' | 'danger' | 'warning';
@@ -126,12 +127,12 @@ export default function ScamPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           width: 34, height: 34, borderRadius: 10,
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, textDecoration: 'none', color: '#fff'
-        }}>←</a>
+        }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>Scam Radar</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>GuardBot · Real-time fraud detection</div>

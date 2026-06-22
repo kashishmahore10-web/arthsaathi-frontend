@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/dist/client/link';
 import { useState } from 'react';
 
 const transactions = [
@@ -39,12 +40,12 @@ export default function CreditPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           width: 34, height: 34, borderRadius: 10,
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, textDecoration: 'none', color: '#fff'
-        }}>←</a>
+        }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>CreditPath 💳</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>UPI history → Credit identity</div>
@@ -229,11 +230,11 @@ export default function CreditPage() {
                 </div>
                 {loan.eligible && (
                   <button style={{
-                    marginTop: 12, width: '100%', padding: '10px', borderRadius: 12, border: 'none',
+                    marginTop: 12, width: '100%', padding: '10px', borderRadius: 12,
                     background: `${loan.color}20`, color: loan.color,
                     fontWeight: 700, fontSize: 13, cursor: 'pointer',
                     fontFamily: "'Plus Jakarta Sans', sans-serif",
-                    border: `1px solid ${loan.color}30` as any
+                    border: `1px solid ${loan.color}30` 
                   }}>Apply via CreditPath →</button>
                 )}
               </div>

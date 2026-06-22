@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { askGovBot } from '@/lib/api';
+import Link from 'next/dist/client/link';
 const schemes = [
   {
     id: 1,
@@ -102,10 +103,17 @@ const schemes = [
 
 const categories = ['All', 'Agriculture', 'Banking', 'Insurance', 'Pension', 'Housing', 'Savings'];
   
-const [govBotAnswer, setGovBotAnswer] = useState('');
-const [loadingGov, setLoadingGov] = useState(false);
 
-useEffect(() => {
+
+export default function SchemesPage() {
+  const [govBotAnswer, setGovBotAnswer] = useState("");
+  const [loadingGov, setLoadingGov] = useState(false); 
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [search, setSearch] = useState('');
+  const [selectedScheme, setSelectedScheme] = useState<typeof schemes[0] | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'eligible'>('eligible');
+ 
+  useEffect(() => {
   const fetchGovSchemes = async () => {
     setLoadingGov(true);
     try {
@@ -119,12 +127,7 @@ useEffect(() => {
   };
   fetchGovSchemes();
 }, []);
-
-export default function SchemesPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [search, setSearch] = useState('');
-  const [selectedScheme, setSelectedScheme] = useState<typeof schemes[0] | null>(null);
-  const [activeTab, setActiveTab] = useState<'all' | 'eligible'>('eligible');
+  
 
   const filtered = schemes.filter(s => {
     const matchCat = activeCategory === 'All' || s.category === activeCategory;
@@ -144,12 +147,12 @@ export default function SchemesPage() {
         padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           width: 34, height: 34, borderRadius: 10,
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, textDecoration: 'none', color: '#fff'
-        }}>←</a>
+        }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>Government Schemes</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>GovBot · 8 schemes available</div>

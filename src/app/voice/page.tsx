@@ -1,7 +1,44 @@
 'use client';
 
+import Link from 'next/dist/client/link';
 import { useState, useEffect } from 'react';
 
+interface SpeechRecognitionResultEvent extends Event {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: {
+        transcript: string;
+      };
+    };
+  };
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
+interface SpeechRecognitionType {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+
+  start(): void;
+  stop(): void;
+
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognitionType;
+    webkitSpeechRecognition: new () => SpeechRecognitionType;
+  }
+}
 const languages = [
   { code: 'hi', label: 'हिंदी', name: 'Hindi', flag: '🇮🇳' },
   { code: 'en', label: 'English', name: 'English', flag: '🇬🇧' },
@@ -147,16 +184,15 @@ const sendMessage = async (text: string) => {
     return;
   }
 
-  const SpeechRecognition =
-    (window as any).SpeechRecognition ||
-    (window as any).webkitSpeechRecognition;
+ const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
 
   if (!SpeechRecognition) {
     alert('Aapka browser voice support nahi karta. Chrome use karein!');
     return;
   }
 
-  const recognition = new SpeechRecognition();
+  const recognition: SpeechRecognitionType = new SpeechRecognition();
   recognition.lang = selectedLang.code === 'hi' ? 'hi-IN'
     : selectedLang.code === 'en' ? 'en-IN'
     : selectedLang.code === 'ta' ? 'ta-IN'
@@ -174,26 +210,29 @@ const sendMessage = async (text: string) => {
   setListening(true);
   setTranscript('');
 
-  recognition.onresult = (event: any) => {
-    let finalTranscript = '';
-    let interimTranscript = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        finalTranscript += event.results[i][0].transcript;
-      } else {
-        interimTranscript += event.results[i][0].transcript;
-      }
-    }
-    setTranscript(finalTranscript || interimTranscript);
-    if (finalTranscript) {
-      setListening(false);
-      sendMessage(finalTranscript);
-    }
-  };
+  recognition.onresult = (event: SpeechRecognitionResultEvent) => {
+  let finalTranscript = "";
+  let interimTranscript = "";
 
-  recognition.onerror = (event: any) => {
-    console.error('Speech error:', event.error);
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    if (event.results[i].isFinal) {
+      finalTranscript += event.results[i][0].transcript;
+    } else {
+      interimTranscript += event.results[i][0].transcript;
+    }
+  }
+
+  setTranscript(finalTranscript || interimTranscript);
+
+  if (finalTranscript) {
     setListening(false);
+    sendMessage(finalTranscript);
+  }
+};
+
+  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+  console.log(event.error);
+  setListening(false);
     if (event.error === 'not-allowed') {
       alert('Mic permission do! Browser settings mein mic allow karein.');
     }
@@ -216,12 +255,12 @@ const sendMessage = async (text: string) => {
         padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12,
         position: 'sticky', top: 0, zIndex: 50
       }}>
-        <a href="/" style={{
+        <Link href="/" style={{
           width: 34, height: 34, borderRadius: 10,
           background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 16, textDecoration: 'none', color: '#fff', cursor: 'pointer'
-        }}>←</a>
+        }}>←</Link>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 16 }}>Voice Assistant</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>ArthSaathi · 12 भाषाएं</div>
