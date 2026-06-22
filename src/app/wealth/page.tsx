@@ -1,6 +1,6 @@
 'use client';
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { askWealthBot } from '@/lib/api';
 
 const sipOptions = [
   { amount: 100, label: '₹100/month', desc: 'Start small, dream big', color: '#10b981', years: 10, returns: '₹23,000' },
@@ -22,6 +22,23 @@ const fundOptions = [
   { name: 'Axis Midcap Fund', type: 'Mid Cap', risk: 'Medium', returns: '15% avg', icon: '📈', color: '#6366f1' },
   { name: 'HDFC Small Cap', type: 'Small Cap', risk: 'High', returns: '18% avg', icon: '🚀', color: '#f59e0b' },
 ];
+const [wealthAdvice, setWealthAdvice] = useState('');
+const [loadingWealth, setLoadingWealth] = useState(false);
+
+useEffect(() => {
+  const fetchAdvice = async () => {
+    setLoadingWealth(true);
+    try {
+      const res = await askWealthBot();
+      setWealthAdvice(res.data.answer);
+    } catch (err) {
+      console.error('WealthBot error:', err);
+    } finally {
+      setLoadingWealth(false);
+    }
+  };
+  fetchAdvice();
+}, []);
 
 export default function WealthPage() {
   const [activeTab, setActiveTab] = useState('journey');
@@ -58,6 +75,34 @@ export default function WealthPage() {
       </header>
 
       <main style={{ maxWidth: 480, margin: '0 auto', padding: '0 16px 60px' }}>
+         
+        {loadingWealth && (
+  <div style={{
+    margin: '16px 0',
+    background: 'rgba(16,185,129,0.06)',
+    border: '1px solid rgba(16,185,129,0.15)',
+    borderRadius: 16, padding: '16px',
+    textAlign: 'center', fontSize: 13,
+    color: 'rgba(255,255,255,0.4)'
+  }}>
+    💰 WealthBot aapki savings journey analyze kar raha hai...
+  </div>
+)}
+{wealthAdvice && (
+  <div style={{
+    margin: '16px 0',
+    background: 'rgba(16,185,129,0.08)',
+    border: '1px solid rgba(16,185,129,0.2)',
+    borderRadius: 16, padding: '16px'
+  }}>
+    <div style={{ fontSize: 12, color: '#10b981', fontWeight: 600, marginBottom: 8 }}>
+      💰 WealthBot — Aapka Next Step
+    </div>
+    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+      {wealthAdvice}
+    </div>
+  </div>
+)}
 
         {/* Hero */}
         <section style={{

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { checkScam } from '@/lib/api';
 
 type ScanResult = {
   status: 'safe' | 'danger' | 'warning';
@@ -81,16 +82,34 @@ export default function ScamPage() {
   const [scanning, setScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<'scan' | 'recent' | 'tips'>('scan');
 
-  const handleScan = () => {
+  const handleScan = async () => {
     if (!input.trim()) return;
     setScanning(true);
     setResult(null);
-    setTimeout(() => {
-      setResult(analyzeText(input));
+    try {
+      const res = await checkScam(input);
+      const d = res.data;
+      setResult({
+        status: d.verdict === 'likely_scam' ? 'danger' : d.verdict === 'suspicious' ? 'warning' : 'safe',
+        score: d.riskScore,
+        title: d.verdict === 'likely_scam' ? '🚨 High Risk — Likely Scam!' : d.verdict === 'suspicious' ? '⚠️ Suspicious — Be Careful' : '✅ Looks Safe',
+        summary: d.userMessage,
+        flags: d.reasons,
+        advice: d.verdict === 'likely_scam' ? 'Block this number and report to cybercrime.gov.in or call 1930.' : 'Stay cautious and verify with official sources.',
+      });
+    } catch {
+      setResult({
+        status: 'warning',
+        score: 50,
+        title: '⚠️ Could not connect to AI',
+        summary: 'Backend se connect nahi hua. Server check karo.',
+        flags: ['API connection failed'],
+        advice: 'Make sure backend is running on port 5000.',
+      });
+    } finally {
       setScanning(false);
-    }, 1800);
+    }
   };
-
   const statusColors = {
     safe: { bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.25)', accent: '#10b981', light: 'rgba(16,185,129,0.12)' },
     warning: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', accent: '#f59e0b', light: 'rgba(245,158,11,0.12)' },

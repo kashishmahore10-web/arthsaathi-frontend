@@ -1,7 +1,6 @@
 'use client';
-
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import { askGovBot } from '@/lib/api';
 const schemes = [
   {
     id: 1,
@@ -102,6 +101,24 @@ const schemes = [
 ];
 
 const categories = ['All', 'Agriculture', 'Banking', 'Insurance', 'Pension', 'Housing', 'Savings'];
+  
+const [govBotAnswer, setGovBotAnswer] = useState('');
+const [loadingGov, setLoadingGov] = useState(false);
+
+useEffect(() => {
+  const fetchGovSchemes = async () => {
+    setLoadingGov(true);
+    try {
+      const res = await askGovBot('Which government schemes am I eligible for?');
+      setGovBotAnswer(res.data.answer);
+    } catch (err) {
+      console.error('GovBot error:', err);
+    } finally {
+      setLoadingGov(false);
+    }
+  };
+  fetchGovSchemes();
+}, []);
 
 export default function SchemesPage() {
   const [activeCategory, setActiveCategory] = useState('All');
@@ -181,7 +198,7 @@ export default function SchemesPage() {
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 16, paddingBottom: 4 }}>
           {categories.map(cat => (
             <button key={cat} onClick={() => setActiveCategory(cat)} style={{
-              flexShrink: 0, padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
+              flexShrink: 0, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
               fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 600, fontSize: 12,
               background: activeCategory === cat ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
               color: activeCategory === cat ? '#a5b4fc' : 'rgba(255,255,255,0.4)',

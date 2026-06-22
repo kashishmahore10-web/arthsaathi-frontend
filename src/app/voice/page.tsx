@@ -60,38 +60,151 @@ export default function VoicePage() {
     return () => clearInterval(interval);
   }, [listening]);
 
-  const getReply = (text: string) => {
-    const lower = text.toLowerCase();
-    if (lower.includes('बजट') || lower.includes('budget')) return agentReplies.budget;
-    if (lower.includes('योजना') || lower.includes('scheme')) return agentReplies.scheme;
-    if (lower.includes('स्कैम') || lower.includes('scam') || lower.includes('fraud')) return agentReplies.scam;
-    if (lower.includes('health') || lower.includes('score') || lower.includes('स्कोर')) return agentReplies.health;
-    return agentReplies.default;
-  };
-
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
-    const now = new Date().toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' });
-    setMessages((prev) => [...prev, { role: 'user', text, time: now }]);
-    setTranscript('');
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: 'agent', text: getReply(text), time: now }]);
-    }, 900);
-  };
-
-  const toggleListen = () => {
-    if (listening) {
-      setListening(false);
-      if (transcript) sendMessage(transcript);
-    } else {
-      setListening(true);
-      // Simulate voice recognition after 2.5s
-      setTimeout(() => {
-        setTranscript(suggestions[Math.floor(Math.random() * suggestions.length)].hi);
-        setListening(false);
-      }, 2500);
+  const getReply = async (text: string): Promise<string> => {
+    try {
+      const lower = text.toLowerCase();
+      if (lower.includes('scam') || lower.includes('स्कैम') || lower.includes('fraud')) {
+        const res = await fetch('http://localhost:5000/api/agents/scamradar/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
+          body: JSON.stringify({ message: text, language: selectedLang.code }),
+        });
+        const data = await res.json();
+        return `GuardBot: ${data.data?.userMessage || 'Yeh scam lag raha hai — dhyan rakhein!'}`;
+      }
+      if (lower.includes('budget') || lower.includes('बजट') || lower.includes('plan')) {
+        const res = await fetch('http://localhost:5000/api/agents/plannerbot/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
+          body: JSON.stringify({ context: text }),
+        });
+        const data = await res.json();
+        return `PlannerBot: ${data.data?.answer || 'Aapka budget plan taiyar kar raha hun...'}`;
+      }
+      if (lower.includes('scheme') || lower.includes('योजना') || lower.includes('yojana') || lower.includes('government')) {
+        const res = await fetch('http://localhost:5000/api/agents/govbot/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
+          body: JSON.stringify({ question: text }),
+        });
+        const data = await res.json();
+        return `GovBot: ${data.data?.answer || 'Aapke liye sarkari yojanaen dhundh raha hun...'}`;
+      }
+      if (lower.includes('health') || lower.includes('score') || lower.includes('स्कोर')) {
+        const res = await fetch('http://localhost:5000/api/agents/health-score', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
+        });
+        const data = await res.json();
+        return `CoachBot: Aapka Financial Health Score ${data.data?.score || 72}/100 hai. ${data.data?.message || 'Bahut achha!'}`;
+      }
+      // Default — GuideBot
+      const res = await fetch('http://localhost:5000/api/agents/guidebot/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
+        body: JSON.stringify({ question: text, language: selectedLang.code }),
+      });
+      const data = await res.json();
+      return `GuideBot: ${data.data?.answer || 'Mujhe samajh nahi aaya — kripya dobara poochhen.'}`;
+    } catch {
+      return 'GuideBot: Server se connect nahi ho paya. Kripya internet check karein.';
     }
   };
+
+  const speak = (text: string, langCode: string) => {
+  window.speechSynthesis.cancel();
+  const cleanText = text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#+/g, '');
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = langCode === 'hi' ? 'hi-IN'
+    : langCode === 'en' ? 'en-IN'
+    : langCode === 'ta' ? 'ta-IN'
+    : langCode === 'te' ? 'te-IN'
+    : langCode === 'bn' ? 'bn-IN'
+    : langCode === 'mr' ? 'mr-IN'
+    : langCode === 'gu' ? 'gu-IN'
+    : langCode === 'kn' ? 'kn-IN'
+    : 'hi-IN';
+  utterance.rate = 1.15;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+};
+
+const sendMessage = async (text: string) => {
+  if (!text.trim()) return;
+  const now = new Date().toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' });
+  setMessages((prev) => [...prev, { role: 'user', text, time: now }]);
+  setTranscript('');
+  const reply = await getReply(text);
+  setMessages((prev) => [...prev, { role: 'agent', text: reply, time: now }]);
+  // AI bolke jawab dega!
+  speak(reply, selectedLang.code);
+};
+
+ const toggleListen = () => {
+  if (listening) {
+    setListening(false);
+    return;
+  }
+
+  const SpeechRecognition =
+    (window as any).SpeechRecognition ||
+    (window as any).webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    alert('Aapka browser voice support nahi karta. Chrome use karein!');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = selectedLang.code === 'hi' ? 'hi-IN'
+    : selectedLang.code === 'en' ? 'en-IN'
+    : selectedLang.code === 'ta' ? 'ta-IN'
+    : selectedLang.code === 'te' ? 'te-IN'
+    : selectedLang.code === 'bn' ? 'bn-IN'
+    : selectedLang.code === 'mr' ? 'mr-IN'
+    : selectedLang.code === 'gu' ? 'gu-IN'
+    : selectedLang.code === 'kn' ? 'kn-IN'
+    : selectedLang.code === 'pa' ? 'pa-IN'
+    : 'hi-IN';
+
+  recognition.continuous = false;
+  recognition.interimResults = true;
+
+  setListening(true);
+  setTranscript('');
+
+  recognition.onresult = (event: any) => {
+    let finalTranscript = '';
+    let interimTranscript = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+    setTranscript(finalTranscript || interimTranscript);
+    if (finalTranscript) {
+      setListening(false);
+      sendMessage(finalTranscript);
+    }
+  };
+
+  recognition.onerror = (event: any) => {
+    console.error('Speech error:', event.error);
+    setListening(false);
+    if (event.error === 'not-allowed') {
+      alert('Mic permission do! Browser settings mein mic allow karein.');
+    }
+  };
+
+  recognition.onend = () => {
+    setListening(false);
+  };
+
+  recognition.start();
+};
 
   return (
     <div style={{ minHeight: '100vh', background: '#060912', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", display: 'flex', flexDirection: 'column' }}>
