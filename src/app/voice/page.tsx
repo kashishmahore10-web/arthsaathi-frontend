@@ -39,6 +39,7 @@ declare global {
     webkitSpeechRecognition: new () => SpeechRecognitionType;
   }
 }
+
 const languages = [
   { code: 'hi', label: 'हिंदी', name: 'Hindi', flag: '🇮🇳' },
   { code: 'en', label: 'English', name: 'English', flag: '🇬🇧' },
@@ -101,7 +102,7 @@ export default function VoicePage() {
     try {
       const lower = text.toLowerCase();
       if (lower.includes('scam') || lower.includes('स्कैम') || lower.includes('fraud')) {
-        const res = await fetch('http://localhost:5000/api/agents/scamradar/check', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agents/scamradar/check`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
           body: JSON.stringify({ message: text, language: selectedLang.code }),
@@ -110,7 +111,7 @@ export default function VoicePage() {
         return `GuardBot: ${data.data?.userMessage || 'Yeh scam lag raha hai — dhyan rakhein!'}`;
       }
       if (lower.includes('budget') || lower.includes('बजट') || lower.includes('plan')) {
-        const res = await fetch('http://localhost:5000/api/agents/plannerbot/ask', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agents/guidebot/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
           body: JSON.stringify({ context: text }),
@@ -119,7 +120,7 @@ export default function VoicePage() {
         return `PlannerBot: ${data.data?.answer || 'Aapka budget plan taiyar kar raha hun...'}`;
       }
       if (lower.includes('scheme') || lower.includes('योजना') || lower.includes('yojana') || lower.includes('government')) {
-        const res = await fetch('http://localhost:5000/api/agents/govbot/ask', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agents/govbot/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
           body: JSON.stringify({ question: text }),
@@ -128,7 +129,7 @@ export default function VoicePage() {
         return `GovBot: ${data.data?.answer || 'Aapke liye sarkari yojanaen dhundh raha hun...'}`;
       }
       if (lower.includes('health') || lower.includes('score') || lower.includes('स्कोर')) {
-        const res = await fetch('http://localhost:5000/api/agents/health-score', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agents/health-score`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
         });
@@ -136,7 +137,7 @@ export default function VoicePage() {
         return `CoachBot: Aapka Financial Health Score ${data.data?.score || 72}/100 hai. ${data.data?.message || 'Bahut achha!'}`;
       }
       // Default — GuideBot
-      const res = await fetch('http://localhost:5000/api/agents/guidebot/ask', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/agents/guidebot/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('arthsaathi_token')}` },
         body: JSON.stringify({ question: text, language: selectedLang.code }),
@@ -182,17 +183,18 @@ const sendMessage = async (text: string) => {
   if (listening) {
     setListening(false);
     return;
-  }
-
- const SpeechRecognition =
+  const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
+
+
+
 
   if (!SpeechRecognition) {
     alert('Aapka browser voice support nahi karta. Chrome use karein!');
     return;
   }
 
-  const recognition: SpeechRecognitionType = new SpeechRecognition();
+  const recognition = new SpeechRecognition();
   recognition.lang = selectedLang.code === 'hi' ? 'hi-IN'
     : selectedLang.code === 'en' ? 'en-IN'
     : selectedLang.code === 'ta' ? 'ta-IN'
@@ -416,4 +418,5 @@ const sendMessage = async (text: string) => {
       </div>
     </div>
   );
+}
 }
