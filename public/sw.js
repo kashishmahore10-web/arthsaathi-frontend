@@ -50,22 +50,21 @@ self.addEventListener("activate", (event) => {
 
 // ─── Fetch Router ───────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // AI API → special cache logic
-  if (
-    url.pathname.startsWith("/api/ai") ||
-    url.pathname.startsWith("/api/agents")
-  ) {
-    event.respondWith(aiCacheStrategy(request));
+  if (url.pathname === "/ussd") {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          const cache = caches.open(CACHE_NAME);
+          cache.then((c) => c.put("/ussd", res.clone()));
+          return res;
+        })
+        .catch(() => caches.match("/ussd"))
+    );
     return;
   }
-
-  // Everything else → network first
-  event.respondWith(networkFirst(request));
 });
-
 // ─── AI Strategy ───────────────────────────────────────────
 async function aiCacheStrategy(request) {
   const cache = await caches.open(AI_CACHE);
@@ -116,21 +115,15 @@ async function networkFirst(request) {
   try {
     const res = await fetch(request);
 
-    // only cache valid GET HTML/pages/assets
-    if (
-      request.method === "GET" &&
-      res.ok &&
-      res.status === 200 &&
-      res.type !== "opaque"
-    ) {
+    if (request.method === "GET" && res.ok) {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, res.clone());
+      cache.put(request.url, res.clone()); // IMPORTANT FIX
     }
 
     return res;
   } catch {
-    const cached = await caches.match(request);
-    return cached || caches.match("/offline");
+    const cached = await caches.match(request.url);
+    return cached || caches.match("/offline") || caches.match("/");
   }
 }
 
