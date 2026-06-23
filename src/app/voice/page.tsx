@@ -183,6 +183,7 @@ const sendMessage = async (text: string) => {
   if (listening) {
     setListening(false);
     return;
+  }
   const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -418,5 +419,4 @@ const sendMessage = async (text: string) => {
       </div>
     </div>
   );
-}
 }
