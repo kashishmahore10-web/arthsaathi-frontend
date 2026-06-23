@@ -132,7 +132,7 @@ export default function SchemesPage() {
   const filtered = schemes.filter(s => {
     const matchCat = activeCategory === 'All' || s.category === activeCategory;
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.fullName.toLowerCase().includes(search.toLowerCase());
+    s.fullName.toLowerCase().includes(search.toLowerCase());
     const matchTab = activeTab === 'all' || s.eligible;
     return matchCat && matchSearch && matchTab;
   });

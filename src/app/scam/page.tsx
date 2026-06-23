@@ -80,6 +80,7 @@ const analyzeText = (text: string): ScanResult => {
 export default function ScamPage() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
   const [activeTab, setActiveTab] = useState<'scan' | 'recent' | 'tips'>('scan');
 
@@ -87,25 +88,36 @@ export default function ScamPage() {
     if (!input.trim()) return;
     setScanning(true);
     setResult(null);
+    setError('');
     try {
-      const res = await checkScam(input);
-      const d = res.data;
+      const token = localStorage.getItem('arthsaathi_token');
+      const res = await fetch('https://arthsaathi-backend.onrender.com/api/agents/scamradar/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: input }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+      const d = data.data;
       setResult({
         status: d.verdict === 'likely_scam' ? 'danger' : d.verdict === 'suspicious' ? 'warning' : 'safe',
         score: d.riskScore,
         title: d.verdict === 'likely_scam' ? '🚨 High Risk — Likely Scam!' : d.verdict === 'suspicious' ? '⚠️ Suspicious — Be Careful' : '✅ Looks Safe',
         summary: d.userMessage,
         flags: d.reasons,
-        advice: d.verdict === 'likely_scam' ? 'Block this number and report to cybercrime.gov.in or call 1930.' : 'Stay cautious and verify with official sources.',
+        advice: d.verdict === 'likely_scam' ? 'Block karo aur cybercrime.gov.in pe report karo ya 1930 call karo.' : 'Savdhaan rahein aur official sources se verify karein.',
       });
-    } catch {
+    } catch (err: unknown) {
       setResult({
         status: 'warning',
         score: 50,
         title: '⚠️ Could not connect to AI',
-        summary: 'Backend se connect nahi hua. Server check karo.',
-        flags: ['API connection failed'],
-        advice: 'Make sure backend is running on port 5000.',
+        summary: 'Backend se connect nahi hua. Login karo pehle.',
+        flags: ['Please login first'],
+        advice: 'Login karke dobara try karein.',
       });
     } finally {
       setScanning(false);
